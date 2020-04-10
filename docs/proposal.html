@@ -24,23 +24,62 @@
     <div class="padded">
       <h2 align="middle">Summary</h2>
         <p>Our project aims to implement 3D texture mapping algorithms based on the assignment 3-1 and 3-2. We’ll implement two mapping methods. One is canonical shape mapping + normals mapping, the other is manually mapping. In the first method, we can try three different strategies in the normal mapping step. With the help of texture, we can render more realistic and complex objects based on ray tracing.</p>
-    <br><br>
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+              <td>
+                <img src="images/galaxy.png" align="middle" width="400px"/>
+                <figcaption align="middle"></figcaption>
+              </td>
+            </tr>
+            <br>
+            
+          </table>
+        </div>
+        <br><br>
 
     <h2 align="middle">Problem Description </h2>
         <p>3D Texture mapping is essential to render realistic images in ray tracing. It is not sufficient to only use material to define the surface of objects that have a complex 3D mesh. In order to define specific colors on different areas of 3D mesh, texture mapping is convenient to do so. For an arbitrary polygon object, there are two most common ways to map texture. The first one is mapping 2D texture to canonical shape (Cylinder, Cube, ect.) first and then projects normals from objects to the canonical-shaped texture[1]. The second method is designing the mapping manually. </p>
         <p>One of the possible biggest challenges during mapping is aliasing. We’ve implemented several anti-aliasing algorithms such as mipmap, supersampling in assignment 3. In this project, we’ll explore more antialiasing algorithms in 3D texture mapping and compare the performance of them. Moreover, the canonical shape mapping algorithm would cause distortion in some parts of the texture map. We’ll also explore that to see how we can alleviate this distortion.</p>
         <p>In this project, we are going to implement different 3D texture mapping methods , compare pros and cons of them and design a GUI that supports texture changing on a specific object. </p>
-
+        <div align="middle">
+          <table style="width=100%">
+            <tr>
+              <td>
+                <img src="images/method.png" align="middle" width="900px"/>
+                <figcaption align="middle"></figcaption>
+              </td>
+            </tr>
+            <br>
+            
+          </table>
+        </div>
     <h2 align="middle">Goals and Deliverables</h2>
     <h3>Result Images</h3>
-      <p>Since we are aiming to implement 3D texture mapping for project 3, the images that will be created by us will be similar to the resulting images of project 3 except that the object will have textures. We will start with basic objects like spheres with different textures like wood. Then we will try to render more complicated objects with textures. For example, a furry rabbit. We will also try the combination of texture mapping and material modeling to create objects made with materials like marble that also have reflection. </p>
-    <h3>Demo of Interactive System</h3>
+      <p>Since we are aiming to implement 3D texture mapping for project 3, the images that will be created by us will be similar to the resulting images of project 3 except that the object will have textures. We will start with basic objects like spheres with different textures like wood. Then we will try to render more complicated objects with textures. For example, a furry rabbit. We will also try the combination of texture mapping and material modeling to create objects made with materials like marble and porcelain that also have reflection. </p>
+      <div align="middle">
+        <table style="width=100%">
+          <tr>
+            <td>
+              <img src="images/porcelain.png" align="middle" width="600px"/>
+              <figcaption align="middle"></figcaption>
+            </td>
+            <td>
+              <img src="images/marble.png" align="middle" width="365px"/>
+              <figcaption align="middle"></figcaption>
+            </td>
+          </tr>
+          <br>
+          
+        </table>
+      </div>
+      <h3>Demo of Interactive System</h3>
       <p>There will be a video demo that shows objects in a scene can be rendered with user selected texture. In our design, there are keyboard shortcut keys to change different materials and patterns of objects. Users are also able to change between different texture mapping method.</p>
     <h3>Metrics</h3>
       <p>The quality of the rendered images is our metric. The quality of the images includes the smoothness of the texture, which means no discontinuity of texture on the surface of objects. Also, there should be no aliasing on the rendered images.</p>
     <h3>What questions do you plan to answer with your analysis?</h3>
       <p>In this project, we are going to learn different approaches to perform texture mapping, since mapping effects are distinctive when applying various mapping functions. There are two mapping steps: 1. wrapping functions to canonical shape including polygonal and cube, 2. Projecting normals from the object such as from texture value to object and using normals to find texture. Therefore, after trials and experiments, we will analyze the best combination for different 3D objects and shapes.</p>
-      <p>We will try to render images with both materials with textures and reflection for some special material like marble surfaces, so that we will figure out what other material could satisfy our expectation.</p>
+      <p>We will try to render images with both materials with textures and reflection for some special material like marble or porcelain surfaces, so that we will figure out what other material could satisfy our expectation.</p>
     <h3>Goals</h3>
       <p>For the baseline deliverables, we plan to come up with the ultimate texture mapping functions based on the objects provided in project 3 and render them using our implemented texture map. Comparison metrics of different approaches will be our analysis to estimate the best combination of mapping functions.</p>
       <p>For the aspirational plan, we are going to generate images with both textures and microcraft effect for some special material, if the baseline goal has been achieved. </p>
@@ -54,7 +93,7 @@
       <li>Week 4: Write report, record description video and build project website.</li>
 
   <h2 align="middle" >Resources</h3>
-      <p>http://graphics.cs.cmu.edu/nsp/course/15-462/Spring04/slides/09-texture.pdf</p>
+      <p>[1] http://graphics.cs.cmu.edu/nsp/course/15-462/Spring04/slides/09-texture.pdf</p>
 
 
 
