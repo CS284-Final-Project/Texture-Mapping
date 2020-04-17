@@ -69,18 +69,26 @@
     <h3>Metrics</h3>
       <p>Firstly, our rendered images with the scattering effect should be realistic. It should look just like the fog effect. For light sources like spotlight, the light beam should be clearly seen in the rendered images. Also, we should consider the level of noise in the rendered images. It might be difficult to tell whether some spots are due to scattering effect or noise. This can be tested with designed light sources and designed scene structure. We are expecting the rendering speed using the CPU to be quite slow which is not able to support real-time rendering. If time permits, we will implement this on GPU to achieve real-time rendering. </p>
     <h3>What questions do you plan to answer with your analysis?</h3>
-      <p></p>
-      <p></p>
+      <p>We are going to analyze the difference between normal surface rendering and rendering with volumetric scattering, since the effects are distinctive: normal surface rendering would generate sharp images same as project 3, while rendering with volumetric scattering has fog effects. Therefore, after comparison, we will visualize the different effects. 
+</p>
+      <p>We will try to render images by adjusting some parameters like absorption rate, Henyey-Greenstein phase function and scattering sampling frequency. The corresponding result images will be compared to analyze the quality and expected effects of rendered images. Furthermore, since we are going to calculate the integral of all the surface and all the volume in the scene, estimation of the integral would be measured by summation which involve the accuracy problem, so that we will find the algorithm with the best estimation and result.
+</p>
     <h3>Goals</h3>
-      <p></p>
-      <p></p>
+      <p><b>Plan to deliver:</b></p>
+      <li>Base on Project 3, implement volumetric scattering and apply on different .dae files 
+</li>
+      <p><b>Hope to achieve</b></p>
+      <li>Accelerate the rendering time using GPU</li>
+      <li>Create interactive interface adjusting parameters like sampling frequency, absorption rate and density of ray, GPU
+</li>
 
     <br>
 
   <h2 align="middle" >Schedule</h2>
-      <li>Week 1: Research on different 3D texture mapping methods. Finalized the selections of texture types. </li>
-      <li>Week 2: Implement texture mapping methods and GUI.</li>
-      <li>Week 3: Debug and improve the texture mapping algorithms. Experiment the pros and cons of different 3D texture mapping methods.</li>
+      <li>Week 1: Read references to learn the basic concept of volumetric path tracing. Discuss implementation process of the algorithm. Write pseudocode & skeleton of the project. 
+ </li>
+      <li>Week 2: Implement the algorithm and debug.</li>
+      <li>Week 3: Do experiment by using different media parameters and compare the experiment results. Try to extend the algorithm to GPU and create an interactive system if there is enough time.</li>
       <li>Week 4: Write report, record description video and build project website.</li>
 
   <h2 align="middle" >Resources</h3>
