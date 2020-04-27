@@ -156,7 +156,10 @@ Spectrum PathTracer::zero_bounce_radiance(const Ray &r,
                                           const Intersection &isect) {
   // TODO: Part 3, Task 2
   // Returns the light that results from no bounces of light
-    return isect.bsdf->get_emission();
+    if (isect.bsdf) {
+        return isect.bsdf->get_emission();
+    }
+    return Spectrum(0,0,0);
   
 }
 
