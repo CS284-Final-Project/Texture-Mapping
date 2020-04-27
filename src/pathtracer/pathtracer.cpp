@@ -256,14 +256,14 @@ Spectrum PathTracer::est_radiance_global_illumination(const Ray &r) {
 			  double phi = 2.0 * PI * random_uniform();
 			  Vector3D dir = (sinf(theta) * cosf(phi),
 				  sinf(theta) * sinf(phi),
-				  coin_flip(0.5) ? cosf(theta) : -1 * cosf(theta));
+                              coin_flip(0.5) ? cosf(theta) : -1.0 * cosf(theta));
 			  double cosine = dot(dir, r.d); // not sure !!!
-			  double phase = (1 - g * g) / (4 * PI*pow(1 + g * g - 2 * g*cosine, 1.5));
+              double phase = (1.0 - g * g) / (4.0 * PI*pow(1.0 + g * g - 2.0 * g*cosine, 1.5));
 			  Ray in_sca_ray(sample_point, dir);
 			  Intersection in_sca_ite;
 			  bvh->intersect(in_sca_ray, &in_sca_ite);
 			  tmp += phase * (one_bounce_radiance(in_sca_ray, in_sca_ite) + 
-							  zero_bounce_radiance(in_sca_ray, in_sca_ite)) * 4 * PI / sample_rate;
+                              zero_bounce_radiance(in_sca_ray, in_sca_ite)) * 4.0 * PI / sample_rate;
 		  }
 		  in_scattering += tmp * exp(-absorption_coef * (r.o - sample_point).norm()) * isect.t / sample_num;
 		  sample_point -= r.d * stride;
