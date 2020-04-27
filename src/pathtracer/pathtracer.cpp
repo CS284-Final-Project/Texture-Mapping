@@ -235,8 +235,38 @@ Spectrum PathTracer::est_radiance_global_illumination(const Ray &r) {
     if(max_ray_depth > 0){
       L_out += at_least_one_bounce_radiance(r, isect);
     }
+  
+  // volumetric scattering
+	  int stride = 2;
+	  float absorption_coef = 0.5;
+	  float ext_coef = 0.5;
+	  float g = 0.1;
+	  Vector3D sample_point = r.o + r.d * (isect.t - fmod(isect.t, stride) * random_uniform());
+	  int sample_num = isect.t / stride;
+	  Spectrum in_scattering(0, 0, 0);
+	  int sample_rate = 32;
+	  for (int i = 0; i < sample_num; i++) {
+		  // uniform sphere sampling
+		  Spectrum tmp(0, 0, 0);
+		  for (int j = 0; j < sample_rate; j++) {
+			  double theta = acos(random_uniform());
+			  double phi = 2.0 * PI * random_uniform();
+			  Vector3D dir = (sinf(theta) * cosf(phi),
+				  sinf(theta) * sinf(phi),
+				  coin_flip(0.5) ? cosf(theta) : -1 * cosf(theta));
+			  double cosine = dot(dir, r.d); // not sure !!!
+			  double phase = (1 - g * g) / (4 * PI*pow(1 + g * g - 2 * g*cosine, 1.5));
+			  Ray in_sca_ray(sample_point, dir);
+			  Intersection in_sca_ite;
+			  bvh->intersect(in_sca_ray, &in_sca_ite);
+			  tmp += phase * (one_bounce_radiance(in_sca_ray, in_sca_ite) + 
+							  zero_bounce_radiance(in_sca_ray, in_sca_ite)) * 4 * PI / sample_rate;
+		  }
+		  in_scattering += tmp * exp(-absorption_coef * (r.o - sample_point).norm()) * isect.t / sample_num;
+		  sample_point -= r.d * stride;
+	  }
 
-    return L_out;
+	  return ext_coef * in_scattering + L_out * exp(-absorption_coef * isect.t);
 }
 
 void PathTracer::raytrace_pixel(size_t x, size_t y) {
