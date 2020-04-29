@@ -12,94 +12,13 @@
 
     }  
   </style> 
-<title>Final Project Proposal  |  CS 284</title>
+<title>Final Project Paper  |  CS 284</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 </head>
 <body>
-<br />
-<h1 align="middle">Final Project Proposal: Volumetric Scattering Rendering</h1>
-    <h3 align="middle">Yizhen Ding, Sundi Xiao, Jiaqi Zhang</h2>
-    <br><br>
-
-    <div class="padded">
-      <h2 align="middle">Summary</h2>
-        <p>In this project, we are going to implement an algorithm that takes into account the media of light transmission when doing ray tracing. Volume is used to extend the algorithm to non-homogeneous media and four effects of media are taken into account: absorption, emission, in-scattering and out-scattering. With the help of the volumetric scattering algorithm, we can render the scene that contains fog, smoke or fire.</p>
-        <div align="middle">
-          <table style="width=100%">
-            <tr>
-              <td>
-                <img src="images/foggy.png" align="middle" width="900px"/>
-                <figcaption align="middle"></figcaption>
-              </td>
-            </tr>
-            <br>
-            
-          </table>
-        </div>
-        <br><br>
-
-    <h2 align="middle">Problem Description </h2>
-        <p>We have implemented surface rendering in project 3, which assumes that the radiance remains constant until it hits a surface. However, it is not 100% realistic because the space between objects in the real world is occupied by some medium such as air, fog, and water. Surface rendering is not sufficient when the effect of media cannot be ignored. Especially when rendering scenes that contain fog, cloud, smoke or fire. Therefore, taking into account medium when casting rays in the ray tracing algorithm is necessary to render more realistic images. Here the volumetric scattering algorithm comes.</p>
-        <p>The basic idea of the volumetric scattering algorithm is simulating the medium by microparticles that would cause absorption, emission, in-scattering and out-scattering of light. Absorption, emission and out-scattering is straightforward and not problematic. However, the biggest challenge is the in-scattering effect, whose computation cost is heavy because it requires integral over all surfaces in the scene. To accelerate it, extending this algorithm from CPU to GPU is a possible effective way. </p>
-        <p>Another problem is that the medium is not homogenous throughout the whole space. This problem can be solved by discretizing the medium into volume elements. Each volume has its own parameters that define the scattering characteristics of the volume. In this way, the medium can be divided into many volumes and each volume is approximated as homogeneous. The handling of non-homogeneous media thus becomes similar to the handling of homogeneous media.  </p>
-
-    <br><br>
-    <h2 align="middle">Goals and Deliverables</h2>
-    <h3>Result Images</h3>
-      <p>We will start with the scenes used in project 3 with a single light source on top of the scene. Then we will try more complicated scenes with multiple light sources and probably with multiple colors. We will also compare results among images rendered with the same scene but with different parameter settings.  </p>
-      <div align="middle">
-        <table style="width=100%">
-          <tr>
-            <td>
-              <img src="images/image1.png" align="middle" width="480px"/>
-              <figcaption align="middle"></figcaption>
-            </td>
-            <td>
-              <img src="images/image2.png" align="middle" width="480px"/>
-              <figcaption align="middle"></figcaption>
-            </td>
-          </tr>
-          <br>
-          
-        </table>
-      </div>
-      <h3>Demo of Interactive System</h3>
-      <p>We will use the same code base as project 3. Thus we will continue using GUI for our project. Most of the features and command options will be preserved and we will also add more command options to allow users to alter each parameter. We will use a video demo for presentation, which will briefly introduce our algorithm and present the final rendered images. If time allows, we are also considering using video to demonstrate real-time volumetric scattering.</p>
-    <h3>Metrics</h3>
-      <p>Firstly, our rendered images with the scattering effect should be realistic. It should look just like the fog effect. For light sources like spotlight, the light beam should be clearly seen in the rendered images. Also, we should consider the level of noise in the rendered images. It might be difficult to tell whether some spots are due to scattering effect or noise. This can be tested with designed light sources and designed scene structure. We are expecting the rendering speed using the CPU to be quite slow which is not able to support real-time rendering. If time permits, we will implement this on GPU to achieve real-time rendering. </p>
-    <h3>What questions do you plan to answer with your analysis?</h3>
-      <p>We are going to analyze the difference between normal surface rendering and rendering with volumetric scattering, since the effects are distinctive: normal surface rendering would generate sharp images same as project 3, while rendering with volumetric scattering has fog effects. Therefore, after comparison, we will visualize the different effects. 
-</p>
-      <p>We will try to render images by adjusting some parameters like absorption rate, Henyey-Greenstein phase function and scattering sampling frequency. The corresponding result images will be compared to analyze the quality and expected effects of rendered images. Furthermore, since we are going to calculate the integral of all the surface and all the volume in the scene, estimation of the integral would be measured by summation which involve the accuracy problem, so that we will find the algorithm with the best estimation and result.
-</p>
-    <h3>Goals</h3>
-      <p><b>Plan to deliver:</b></p>
-      <li>Base on Project 3, implement volumetric scattering and apply on different .dae files 
-</li>
-      <p><b>Hope to achieve</b></p>
-      <li>Accelerate the rendering time using GPU</li>
-      <li>Create interactive interface adjusting parameters like sampling frequency, absorption rate and density of ray, GPU
-</li>
-
-    <br>
-
-  <h2 align="middle" >Schedule</h2>
-      <li>Week 1: Read references to learn the basic concept of volumetric path tracing. Discuss implementation process of the algorithm. Write pseudocode & skeleton of the project. 
- </li>
-      <li>Week 2: Implement the algorithm and debug.</li>
-      <li>Week 3: Do experiment by using different media parameters and compare the experiment results. Try to extend the algorithm to GPU and create an interactive system if there is enough time.</li>
-      <li>Week 4: Write report, record description video and build project website.</li>
-
-  <h2 align="middle" >Resources</h3>
-      <p><a href="https://cs.dartmouth.edu/~wjarosz/publications/dissertation/chapter4.pdf">Light Transport in Participating Media</a></p>
-      <p><a href="http://luthuli.cs.uiuc.edu/~daf/courses/rendering/papers/lafortune96rendering.pdf">Rendering Participating Media with Bidirectional Path Tracing</a></p>
-
-
-
-
-
-</div>
+	<h1>Final Project Paper</h1>
+	<p> Click<a href="images/Volumetric_scattering_paper.pdf"> this</a>.</p>
 </body>
 </html>
 
