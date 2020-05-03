@@ -49,8 +49,8 @@ Spectrum DiffuseBSDF::f(const Vector3D &wo, const Vector3D &wi) {
   // TODO (Part 3.1):
   // This function takes in both wo and wi and returns the evaluation of
   // the BSDF for those two directions.
-    
-  return Spectrum(reflectance/PI);
+
+  return reflectance/(PI);
 }
 
 /**
@@ -63,8 +63,8 @@ Spectrum DiffuseBSDF::sample_f(const Vector3D &wo, Vector3D *wi, float *pdf) {
   // After sampling a value for wi, it returns the evaluation of the BSDF
   // at (wo, *wi).
   // You can use the `f` function. The reference solution only takes two lines.
-    *wi = sampler.get_sample(pdf);
-  return f(wo, *wi);
+	*wi = DiffuseBSDF::sampler.get_sample(pdf);
+	return DiffuseBSDF::f(wo, *wi);
 }
 
 //===============================================================
@@ -76,14 +76,19 @@ Spectrum DiffuseBSDF::sample_f(const Vector3D &wo, Vector3D *wi, float *pdf) {
  */
 Spectrum MirrorBSDF::f(const Vector3D &wo, const Vector3D &wi) {
   // Project 3-2
-  return Spectrum();
+	if (wo.z == wi.z)
+		return reflectance * (1.0 / fabs(wi.z));
+	else
+		return Spectrum();
 }
 
 /**
  * Evalutate Mirror BSDF
  */
 Spectrum MirrorBSDF::sample_f(const Vector3D &wo, Vector3D *wi, float *pdf) {
-  return Spectrum();
+	reflect(wo, wi);
+	*pdf = 1.0;
+	return f(wo, *wi);
 }
 
 /**
@@ -112,7 +117,26 @@ Spectrum RefractionBSDF::f(const Vector3D &wo, const Vector3D &wi) {
  */
 Spectrum RefractionBSDF::sample_f(const Vector3D &wo, Vector3D *wi,
                                   float *pdf) {
-  return Spectrum();
+	if (!refract(wo, wi, ior)) {
+		*pdf = 1.0;
+		reflect(wo, wi);
+		return Spectrum(0, 0, 0);
+	}
+
+	float n1, n2, cos_theta;
+	if (wo.z > 0) {
+		n1 = 1.0;
+		n2 = ior;
+	}
+	else {
+		n2 = 1.0;
+		n1 = ior;
+	}
+
+	refract(wo, wi, ior);
+	*pdf = 1.0;
+	Spectrum f = transmittance * (n2 * n2 / (n1 * n1 * fabs(wi->z)));
+	return f;
 }
 
 /**
@@ -126,18 +150,74 @@ Spectrum GlassBSDF::f(const Vector3D &wo, const Vector3D &wi) {
  * Evalutate Glass BSDF
  */
 Spectrum GlassBSDF::sample_f(const Vector3D &wo, Vector3D *wi, float *pdf) {
-  return Spectrum();
+	if (!refract(wo, wi, ior)) {
+		*pdf = 1.0;
+		reflect(wo, wi);
+		return reflectance * (1.0 / fabs(wi->z));
+	}
+
+	float n1, n2, cos_theta;
+	if (wo.z > 0) {
+		n1 = 1.0;
+		n2 = ior;
+		cos_theta = fabs(wo.z);
+	}
+	else {
+		n2 = 1.0;
+		n1 = ior;
+		cos_theta = fabs(wi->z);
+	}
+	float R0 = pow(((n1 - n2) / (n1 + n2)), 2);
+	float Fr = R0 + (1.0 - R0) * pow((1.0 - cos_theta), 5);
+	if ((double)(std::rand()) / RAND_MAX < Fr) {
+		reflect(wo, wi);
+		*pdf = Fr;
+		return Fr * reflectance * (1.0 / fabs(wi->z));
+	}
+	else {
+		refract(wo, wi, ior);
+		*pdf = (1.0 - Fr);
+		Spectrum f = transmittance * ((1.0 - Fr) * n2 * n2 / (n1 * n1 * fabs(wi->z)));
+		return f;
+	}
 }
 
 /**
  * Compute the reflection vector according to incident vector
  */
-void BSDF::reflect(const Vector3D &wo, Vector3D *wi) {}
+void BSDF::reflect(const Vector3D &wo, Vector3D *wi) {
+	Vector3D normal;
+	if (wo.z < 0)
+		normal = Vector3D(0, 0, -1.0);
+	else
+		normal = Vector3D(0, 0, 1.0);
+
+	*wi = -wo + 2.0 * dot(wo, normal) * normal;
+}
 
 /**
  * Compute the refraction vector according to incident vector and ior
  */
-bool BSDF::refract(const Vector3D &wo, Vector3D *wi, float ior) { return true; }
+bool BSDF::refract(const Vector3D &wo, Vector3D *wi, float ior) {
+	double sin_theta;
+	float n;
+
+	// decide wo entering surface / going out
+	if (wo.z > 0) {  // entering
+		n = 1.0 / ior;
+		wi->z = -sqrt(1.0 - n * n * (1.0 - wo.z * wo.z));
+	}
+	else {
+		n = ior;
+		if ((1.0 - n * n * (1.0 - wo.z * wo.z)) < 0.)
+			return false;
+		wi->z = sqrt(1.0 - n * n * (1.0 - wo.z * wo.z));
+	}
+	wi->x = -n * wo.x;
+	wi->y = -n * wo.y;
+	wi->normalize();
+	return true;
+}
 
 /**
  * Evalutate Emission BSDF (Light Source)

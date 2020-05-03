@@ -48,6 +48,52 @@ void BVHAccel::drawOutline(BVHNode *node, const Color &c, float alpha) const {
   }
 }
 
+// Another solution, sort, O(NlgN)
+//bool cmp0(Primitive * a,
+//		  Primitive * b) {
+//	return (a->get_bbox().centroid()[0] < b->get_bbox().centroid()[0]);
+//}
+//bool cmp1(Primitive * a,
+//		  Primitive * b) {
+//	return (a->get_bbox().centroid()[1] < b->get_bbox().centroid()[1]);
+//}
+//bool cmp2(Primitive * a,
+//		  Primitive * b) {
+//	return (a->get_bbox().centroid()[2] < b->get_bbox().centroid()[2]);
+//}
+
+// find the k-th element in an array, partition, O(lgN) time
+std::vector<Primitive *>::iterator findK(std::vector<Primitive *>::iterator start,
+										 std::vector<Primitive *>::iterator end,
+										 int k,
+										 int axis){
+	if (start+1 == end)
+		return start;
+	auto p = start;
+	Primitive *pivot = *start;
+	for (auto ite = start+1; ite != end; ite++) {
+		if ((*ite)->get_bbox().centroid()[axis] < pivot->get_bbox().centroid()[axis]) {
+			swap(*(++p), *ite);
+		}
+	}
+	swap(*start, *p);
+	int tmp = p - start;
+	if (tmp == k)
+		return p;
+	else if (tmp > k)
+		return findK(start, p+1, k, axis);
+	else return findK(p+1, end, k - tmp - 1, axis);
+
+	// Another solution, sort, O(NlgN)
+	//if (axis == 0)
+	//	sort(start, end, cmp0);
+	//else if (axis == 1)
+	//	sort(start, end, cmp1);
+	//else if (axis == 2)
+	//	sort(start, end, cmp2);
+	//return start + k;
+}
+
 BVHNode *BVHAccel::construct_bvh(std::vector<Primitive *>::iterator start,
                                  std::vector<Primitive *>::iterator end,
                                  size_t max_leaf_size) {
@@ -58,58 +104,100 @@ BVHNode *BVHAccel::construct_bvh(std::vector<Primitive *>::iterator start,
   // single leaf node (which is also the root) that encloses all the
   // primitives.
 
-    BBox bbox;
-    int leaf_size = 0;
-    for (auto p = start; p != end; p++) {
-        BBox bb = (*p)->get_bbox();
-        bbox.expand(bb);
-        leaf_size+=1;
-    }
-    if (leaf_size < int(max_leaf_size)){
-        BVHNode *node = new BVHNode(bbox);
-        node->start = start;
-        node->end = end;
-        return node;
-    }
-    //create internal node, split to half
-    else{
-        BVHNode *node = new BVHNode(bbox);
-        int max_axis = 0;
-        double max_distance = 0.0;
-        for (int i = 0; i<3; i++){
-            if (bbox.extent[i]>max_distance){
-                max_distance = bbox.extent[i];
-                max_axis = i;
-            }
-        }
-        if (max_axis == 0){
-             sort(start, end, []( Primitive*  lhs,Primitive*  rhs){
-                 return (lhs)->get_bbox().centroid()[0] <(rhs)->get_bbox().centroid()[0];
-             });
-        }
-        else if (max_axis == 1){
-            sort(start, end, []( Primitive*  lhs,Primitive*  rhs){
-                return (lhs)->get_bbox().centroid()[1] <(rhs)->get_bbox().centroid()[1];
-            });
-        }
-        else{
-            sort(start, end, []( Primitive*  lhs,Primitive*  rhs){
-                return (lhs)->get_bbox().centroid()[2] <(rhs)->get_bbox().centroid()[2];
-            });
-        }
-       
-        int count = 0;
-        std::vector<Primitive*>::iterator split_p;
-        for (split_p = start; count!= int(leaf_size/2); split_p++){
-            count += 1;
-        }
-        node->start = start;
-        node->end = end;
-        node->bb = bbox;
-        node->l = construct_bvh(start, split_p, max_leaf_size);
-        node->r =construct_bvh(split_p, end, max_leaf_size);
-        return node;
-    }
+  BBox bbox;
+  int cnt = 0;
+  for (auto p = start; p != end; p++) {
+    BBox bb = (*p)->get_bbox();
+    bbox.expand(bb);
+	cnt++;
+  }
+
+  if (start == end || cnt <= max_leaf_size) { // leaf node
+	  BVHNode *node = new BVHNode(bbox);
+	  node->start = start;
+	  node->end = end;
+	  return node;
+  }
+  Vector3D wlh = bbox.max - bbox.min;
+  int axis;
+  if (wlh.x > wlh.y && wlh.x > wlh.z)
+	  axis = 0;
+  else if (wlh.y > wlh.x && wlh.y > wlh.z)
+	  axis = 1;
+  else axis = 2;
+
+  double mid = bbox.centroid()[axis];
+  vector<Primitive *> leftVct;
+  vector<Primitive *> rightVct;
+  for (auto ite = start; ite != end; ite++) {
+	  if ((*ite)->get_bbox().centroid()[axis] < mid)
+		  leftVct.push_back(*ite);
+	  else
+		  rightVct.push_back(*ite);
+  }
+
+  if (leftVct.empty() || rightVct.empty()) {
+	  // if generate an empty area
+	  auto k = findK(start, end, (end - start - 1) / 2, axis);
+	  double mid = (*k)->get_bbox().centroid()[axis];
+	  leftVct.clear();
+	  rightVct.clear();
+	  for (auto ite = start; ite != end; ite++) {
+		  if ((*ite)->get_bbox().centroid()[axis] <= mid)
+			  leftVct.push_back(*ite);
+		  else
+			  rightVct.push_back(*ite);
+	  }
+	  if (leftVct.empty()) {
+		  leftVct.push_back(rightVct.back());
+		  rightVct.pop_back();
+	  }
+	  else if (rightVct.empty()) {
+		  rightVct.push_back(leftVct.back());
+		  leftVct.pop_back();
+	  }
+  }
+
+  auto ite = start;
+  for (Primitive *p : leftVct) {
+	  (*ite) = p;
+	  ite++;
+  }
+  auto midEnd = ite;
+  for (Primitive *p : rightVct) {
+	  (*ite) = p;
+	  ite++;
+  }
+
+  BVHNode *node = new BVHNode(bbox);
+  //if (leftVct.empty()) {
+	 // node->l = BVHAccel::construct_bvh(start, midEnd, max_leaf_size);
+	 // BBox bbox;
+	 // for (Primitive *p : rightVct) {
+		//  BBox bb = p->get_bbox();
+		//  bbox.expand(bb);
+	 // }
+	 // node->r = new BVHNode(bbox);
+	 // node->r->start = midEnd;
+	 // node->r->end = end;
+	 // return node;
+  //}
+  //if (rightVct.empty()) {
+	 // node->r = BVHAccel::construct_bvh(midEnd, end, max_leaf_size);
+	 // BBox bbox;
+	 // for (Primitive *p : leftVct) {
+		//  BBox bb = p->get_bbox();
+		//  bbox.expand(bb);
+	 // }
+	 // node->l = new BVHNode(bbox);
+	 // node->l->start = start;
+	 // node->l->end = midEnd;
+	 // return node;
+  //}
+  node->l = BVHAccel::construct_bvh(start, midEnd, max_leaf_size);
+  node->r = BVHAccel::construct_bvh(midEnd, end, max_leaf_size);
+
+  return node;
 }
 
 bool BVHAccel::has_intersection(const Ray &ray, BVHNode *node) const {
@@ -118,52 +206,67 @@ bool BVHAccel::has_intersection(const Ray &ray, BVHNode *node) const {
   // Take note that this function has a short-circuit that the
   // Intersection version cannot, since it returns as soon as it finds
   // a hit, it doesn't actually have to find the closest hit.
-//
-//  for (auto p : primitives) {
-//    total_isects++;
-//    if (p->has_intersection(ray))
-//      return true;
-//  }
-//  return false;
-    double t0;
-    double t1;
-    return node->bb.intersect(ray, t0, t1);
+	double t0, t1;
+	if (!node || !node->bb.intersect(ray, t0, t1)) {
+		return false;
+	}
+	if (node->isLeaf()) {
+		// test intersection with all primitives
+		for (auto ite = node->start; ite != node->end; ite++) {
+			total_isects++;
+			if ((*ite)->has_intersection(ray))
+				return true;
+		}
+		return false;
+	}
+	if (node->l && has_intersection(ray, node->l)) {
+		return true;
+	}
+	if (node->r && has_intersection(ray, node->r)) {
+		return true;
+	}
+	return false;
+  /*for (auto p : primitives) {
+    total_isects++;
+    if (p->has_intersection(ray))
+      return true;
+  }
+  return false;*/
 }
 
 bool BVHAccel::intersect(const Ray &ray, Intersection *i, BVHNode *node) const {
   // TODO (Part 2.3):
   // Fill in the intersect function.
-    double t0;
-    double t1;
-        //return node->bb.intersect(ray, t0, t1);
-    bool output = false;
-    if (!node->bb.intersect(ray, t0, t1)){
-        return false;
-    }
-    if (node->isLeaf()){
-        
-        for (auto p = node->start; p!=node->end; p++){
-            if ( (*p)->intersect(ray, i)){
-                output = true;
-            }
+	double t0, t1;
+	if (!node || !node->bb.intersect(ray, t0, t1)) {
+		return false;
+	}
+	bool hit = false;
+	if (node->isLeaf()) {
+		// test intersection with all primitives
+		for (auto ite = node->start; ite != node->end; ite++) {
+			total_isects++;
+			hit = (*ite)->intersect(ray, i) || hit;
+		}
+		return hit;
+	}
 
-        }
-        //return intersect;
-    }
-    //Intersection* i_1 = new Intersection();
-    else{
-        bool hit1 = intersect(ray, i, node->l);
-        bool hit2 = intersect(ray, i, node->r);
-        output = hit1||hit2;
-    }
-    return output;
+	bool left = false;
+	bool right = false;
+	if (node->l) {
+		left = intersect(ray, i, node->l);
+	}
+	if (node->r) {
+		right = intersect(ray, i, node->r);
+	}
+	return left || right;
 
-//  bool hit = false;
-//  for (auto p : primitives) {
-//    total_isects++;
-//    hit = p->intersect(ray, i) || hit;
-//  }
-//  return hit;
+  /*bool hit = false;
+  for (auto p : primitives) {
+    total_isects++;
+    hit = p->intersect(ray, i) || hit;
+  }
+  return hit; */
 }
 
 } // namespace SceneObjects

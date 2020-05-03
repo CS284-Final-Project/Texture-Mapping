@@ -27,56 +27,51 @@ bool Triangle::has_intersection(const Ray &r) const {
   // The difference between this function and the next function is that the next
   // function records the "intersection" while this function only tests whether
   // there is a intersection.
-    Vector3D AB = p1 - p2;
-    Vector3D AC = p1 - p3;
-    Vector3D N = cross(AB, AC);
-    N.normalize();
-    double t = dot((p1 - r.o), N)/dot(r.d, N);
-    if ((t>r.min_t) && (t<r.max_t)&& (t>0.0)){
-        Vector3D p = r.o+ r.d * t;
-        double alpha = (cross(p-p2, p-p3).norm())/(cross(AB,AC).norm());
-        double beta = (cross(p-p3, p-p1).norm())/(cross(AB,AC).norm());
-        //double gamma = 1.0 - alpha - beta;
-        double gamma = (cross(p-p2, p-p1).norm())/(cross(AB,AC).norm());
-        //if (alpha>=0 && beta>=0 && gamma>=0){
-        if (abs(1-(alpha+beta+gamma))<0.00001){
-            r.max_t = t;
-            return true;
-        }
-    }
-   return false;
-  
+	Vector3D e1 = Triangle::p2 - Triangle::p1;
+	Vector3D e2 = Triangle::p3 - Triangle::p1;
+	Vector3D s = r.o - Triangle::p1;
+	Vector3D s1 = cross(r.d, e2);
+	Vector3D s2 = cross(s, e1);
+	double tmp = 1. / (dot(s1, e1));
+	double t = dot(s2, e2)*tmp;
+	if (t < r.min_t || t > r.max_t)
+		return false;
+	double b2 = dot(s1, s)*tmp;
+	if (b2 < 0 || b2 > 1)
+		return false;
+	double b3 = dot(s2, r.d)*tmp;
+	double b1 = 1 - b3 - b2;
+	if (b3 < 0 || b3 > 1 || b1 < 0)
+		return false;
+  return true;
 }
 
 bool Triangle::intersect(const Ray &r, Intersection *isect) const {
   // Part 1, Task 3:
   // implement ray-triangle intersection. When an intersection takes
   // place, the Intersection data should be updated accordingly
-    //return true;
-    Vector3D AB = p1 - p2;
-    Vector3D AC = p1 - p3;
-    Vector3D N = cross(AB, AC);
-    N.normalize();
-    double t = dot((p1 - r.o), N)/dot(r.d, N);
-    if ((t>r.min_t) && (t<r.max_t) && (t>0.0)){
-        Vector3D p = r.o+ r.d*t;
-        double alpha = (cross(p-p2, p-p3).norm())/(cross(AB,AC).norm());
-        double beta = (cross(p-p3, p-p1).norm())/(cross(AB,AC).norm());
-        double gamma = (cross(p-p2, p-p1).norm())/(cross(AB,AC).norm());
-        //if (alpha>=0 && beta>=0 && gamma>=0){
-        if (abs(1-(alpha+beta+gamma))<0.00001){
-            //cout<< alpha<<" "<<beta<<" "<<gamma<<" "<<endl;
-            isect->t = t;
-            Vector3D n_ = alpha*n1 + (beta*n2) + (gamma*n3);
-            n_.normalize();
-            isect->n = n_;
-            isect->primitive = this;
-            isect->bsdf = get_bsdf();
-            r.max_t = t;
-            return true;
-        }
-    }
-    return false;
+	Vector3D e1 = Triangle::p2 - Triangle::p1;
+	Vector3D e2 = Triangle::p3 - Triangle::p1;
+	Vector3D s = r.o - Triangle::p1;
+	Vector3D s1 = cross(r.d, e2);
+	Vector3D s2 = cross(s, e1);
+	double tmp = 1. / (dot(s1, e1));
+	double t = dot(s2, e2)*tmp;
+	if (t < r.min_t || t > r.max_t)
+		return false;
+	double b2 = dot(s1, s)*tmp;
+	if (b2 < 0 || b2 > 1)
+		return false;
+	double b3 = dot(s2, r.d)*tmp;
+	double b1 = 1 - b3 - b2;
+	if (b3 < 0 || b3 > 1 || b1 < 0)
+		return false;
+	r.max_t = t;
+	isect->t = t;
+	isect->n = b1 * n1 + b2 * n2 + b3 * n3;
+	isect->primitive = this;
+	isect->bsdf = this->get_bsdf();
+  return true;
 }
 
 void Triangle::draw(const Color &c, float alpha) const {
