@@ -53,6 +53,9 @@ namespace CGL {
         Spectrum one_bounce_radiance(const Ray& r, const SceneObjects::Intersection& isect);
         Spectrum at_least_one_bounce_radiance(const Ray& r, const SceneObjects::Intersection& isect);
         
+		// Course project: volumetric scattering.
+		Spectrum medium_scattering(const Ray& r, const SceneObjects::Intersection& isect);
+
         Spectrum debug_shading(const Vector3D& d) {
             return Vector3D(abs(d.r), abs(d.g), .0).unit();
         }
