@@ -172,7 +172,6 @@ Spectrum PathTracer::at_least_one_bounce_radiance(const Ray &r,
   Vector3D hit_p = r.o + r.d * (isect.t);
   Vector3D w_out = w2o * (-r.d);
   Spectrum L_out(0, 0, 0);
-
   if (!isect.bsdf->is_delta())
 	  L_out += one_bounce_radiance(r, isect);
 
