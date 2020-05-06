@@ -185,45 +185,74 @@ Spectrum PathTracer::at_least_one_bounce_radiance(const Ray &r,
   nextRay.depth = r.depth + 1;
 
   // volumetric scattering
-  float absorption_coef = 0.5;
-  float ext_coef = 1;
+  float absorption_coef = 0.4;
+  float ext_coef = 0.6;
   Spectrum in_scattering(0, 0, 0);
-  if (!bvh->has_intersection(nextRay))
-	  return Spectrum(0, 0, 0);
+  
 
-	  float stride = 0.5;
-	  float g = 0.5;
-	  Vector3D sample_point = r.o + r.d * (isect.t - fmod(isect.t, stride) * random_uniform());
-	  int sample_num = isect.t / stride;
-	  int sample_rate = 2;
-	  for (int i = 0; i < sample_num; i++) {
-		  // uniform sphere sampling
-		  Spectrum tmp(0, 0, 0);
-		  for (int j = 0; j < sample_rate; j++) {
-			  double theta = acos(random_uniform());
-			  double phi = 2.0 * PI * random_uniform();
-			  Vector3D dir(sinf(theta) * cosf(phi),
-				  sinf(theta) * sinf(phi),
-				  coin_flip(0.5) ? cosf(theta) : -1 * cosf(theta));
-			  double cosine = dot(dir, r.d); // not sure !!!
-			  double phase = (1 - g * g) / (4 * PI*pow(1 + g * g - 2 * g*cosine, 1.5));
-			  Ray in_sca_ray(sample_point, dir);
-			  in_sca_ray.min_t = EPS_F;
-			  if (!bvh->has_intersection(in_sca_ray))
+  float stride = 0.5;
+  float g = 0.5;
+  Vector3D sample_point = r.o + r.d * (isect.t - fmod(isect.t, stride) * random_uniform());
+  int sample_num = isect.t / stride;
+  int sample_rate = 2;
+
+  size_t N = 0;
+  for (int i = 0; i < sample_num; i++) {
+	  Spectrum point_light;
+	  for (int j = 0; j < scene->lights.size(); j++) {
+		  N = (scene->lights.at(j)->is_delta_light()) ? 1 : ns_area_light;
+		  Spectrum spc_light;
+		  for (int i = 0; i < N; i++) {
+			  Vector3D wi;
+			  float distToLight;
+			  float pdf;
+			  Spectrum L = scene->lights.at(j)->sample_L(sample_point, &wi, &distToLight, &pdf); // hit_p should be world coord or object coord?
+			  Ray shadowRay(hit_p, wi);
+			  //shadowRay.min_t = EPS_F;
+			  shadowRay.max_t = distToLight - EPS_F;
+			  if (bvh->has_intersection(shadowRay))
 				  continue;
-			  Intersection in_sca_ite;
-			  bvh->intersect(in_sca_ray, &in_sca_ite);
-			  in_sca_ite.t -= EPS_F;
-			  tmp += phase * (one_bounce_radiance(in_sca_ray, in_sca_ite) +
-				  zero_bounce_radiance(in_sca_ray, in_sca_ite)) * 4 * PI / sample_rate;
+			  double cosine = dot(wi, r.d);
+			  double phase = (1 - g * g) / (4 * PI*pow(1 + g * g - 2 * g*cosine, 1.5));
+
+			  spc_light += phase * L * 4 * PI / pdf;
 		  }
-		  in_scattering += tmp * exp(-absorption_coef * (r.o - sample_point).norm()) * isect.t / sample_num;
-		  sample_point -= r.d * stride;
+		  point_light += spc_light / N;
 	  }
+	  in_scattering += point_light * exp(-absorption_coef * (r.o - sample_point).norm()) / sample_num;
+	  sample_point -= r.d * stride;
+  }
+	  
+
+	  //for (int i = 0; i < sample_num; i++) {
+		 // // uniform sphere sampling
+		 // Spectrum tmp(0, 0, 0);
+		 // for (int j = 0; j < sample_rate; j++) {
+			//  double theta = acos(random_uniform());
+			//  double phi = 2.0 * PI * random_uniform();
+			//  Vector3D dir(sinf(theta) * cosf(phi),
+			//	  sinf(theta) * sinf(phi),
+			//	  coin_flip(0.5) ? cosf(theta) : -1 * cosf(theta));
+			//  double cosine = dot(dir, r.d);
+			//  double phase = (1 - g * g) / (4 * PI*pow(1 + g * g - 2 * g*cosine, 1.5));
+			//  Ray in_sca_ray(sample_point, dir);
+			//  in_sca_ray.min_t = EPS_F;
+			//  if (!bvh->has_intersection(in_sca_ray))
+			//	  continue;
+			//  Intersection in_sca_ite;
+			//  bvh->intersect(in_sca_ray, &in_sca_ite);
+			//  in_sca_ite.t -= EPS_F;
+			//  tmp += phase * (one_bounce_radiance(in_sca_ray, in_sca_ite) +
+			//	  zero_bounce_radiance(in_sca_ray, in_sca_ite)) * 4 * PI / sample_rate;
+		 // }
+		 // in_scattering += tmp * exp(-absorption_coef * (r.o - sample_point).norm()) * isect.t / sample_num;
+		 // sample_point -= r.d * stride;
+	  //}
  
   //int ext_coef = 0;
   //Spectrum in_scattering;
-
+  if (!bvh->has_intersection(nextRay))
+	  return Spectrum();
   if (!coin_flip(0.65) || nextRay.depth >= max_ray_depth) 
 	  // russian roulette,
 	  // reach maxmum ray
